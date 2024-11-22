@@ -128,28 +128,25 @@ def load_auth_status():
 
 def clear_session_state():
     """Clear session state and remove temporary files"""
-    # Clear auth file
-    try:
-        if os.path.exists(AUTH_FILE):
-            os.remove(AUTH_FILE)
-    except Exception as e:
-        print(f"Error removing auth file: {e}")
-
-    # Clear all session state
-    for key in list(st.session_state.keys()):
+    keys_to_clear = list(st.session_state.keys())
+    for key in keys_to_clear:
         del st.session_state[key]
-    
-    # Reset authentication status
-    st.session_state.authentication_status = False
 
-    # Clear upload directory
-    if os.path.exists(UPLOAD_DIR):
+    # Ensure UPLOAD_DIR exists before listing files
+    if os.path.exists(UPLOAD_DIR) and os.path.isdir(UPLOAD_DIR):
         for file in os.listdir(UPLOAD_DIR):
+            file_path = os.path.join(UPLOAD_DIR, file)
             try:
-                os.remove(os.path.join(UPLOAD_DIR, file))
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
             except Exception as e:
-                print(f"Error removing file {file}: {e}")
-
+                st.warning(f"Error removing file {file}: {e}")
+    else:
+        # Create the directory if it doesn't exist
+        if not os.path.exists(UPLOAD_DIR):
+            os.makedirs(UPLOAD_DIR)
+        else:
+            st.warning(f"The path '{UPLOAD_DIR}' is not a valid directory.")
 def logout():
     """Handle logout"""
     clear_session_state()
